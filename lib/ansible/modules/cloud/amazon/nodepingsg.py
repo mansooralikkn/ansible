@@ -1,3 +1,4 @@
+#!/usr/bin/python
 try:
 	import boto3
         Has_boto3 = True
@@ -95,11 +96,11 @@ def main():
    ipcompare=NodepingSgCompare(noderegion, SgGrp).ipCompare()
    lists=ipcompare
 #removing unknown IPs
-   sg = nodepingsg.ec2.SecurityGroup('sg-604d6105')
+   sg = nodepingsg.ec2.SecurityGroup(SgGrp)
    for ip in ipcompare:
    	sg.revoke_ingress(IpProtocol="tcp", CidrIp=ip, FromPort=80, ToPort=80)
-   module.exit_json(changed=lists)
-if __name__ == '__name__':
+   module.exit_json(changed='changed')
+if __name__ == '__main__':
 
    main()
 #sgip= NodepingSgCompare('NO','sg-99ec01e0').ipSg()
