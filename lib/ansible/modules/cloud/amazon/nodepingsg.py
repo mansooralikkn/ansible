@@ -79,9 +79,9 @@ def main():
         argument_spec = dict(
             SgGrp               = dict(required=True, type='str'),
             FromPort = dict(required=False,type='int'),  # used to handle 'dest is a directory' via template, a slight hack
-            Noderegion        = dict(required=True, type='str', default='NO'),
-            toPort              = dict(required=false, type='int'),
-            lists              = dict(required=false, type='list'),
+            Noderegion        = dict(required=True, type='str' ),
+            toPort              = dict(required=False, type='int'),
+            lists              = dict(required=False, type='list'),
         ),
         add_file_common_args=True,
         supports_check_mode=True,
@@ -92,8 +92,8 @@ def main():
    Noderegion= module.params['Noderegion']
    toPort= module.params['toPort']
 
-   nodepingip=[x.encode("utf-8") for x in NodepingSgCompare(noderegion,SgGrp).ipExternal()]
-   ipcompare=NodepingSgCompare(noderegion, SgGrp).ipCompare()
+   nodepingip=[x.encode("utf-8") for x in NodepingSgCompare(Noderegion,SgGrp).ipExternal()]
+   ipcompare=NodepingSgCompare(Noderegion, SgGrp).ipCompare()
    lists=ipcompare
 #removing unknown IPs
    sg = nodepingsg.ec2.SecurityGroup(SgGrp)
