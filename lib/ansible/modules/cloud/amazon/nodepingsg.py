@@ -36,29 +36,16 @@ class NodepingSgCompare:
            nregion=region[self.noderegion]
            return nregion
     	def ipExternal(self):
-           if not has_bs4:
-              module.fail_json(msg=' bs4 required for this module')
-           if not has_re:
-              module.fail_json(msg='re required for this module')
-           if not Has_request:
-              module.fail_json(msg='request required for this module')
 	   nregion=self.nodeRegionid()
-           try:
-	   	page= requests.get('https://nodeping.com/faq')
-           	soup = BeautifulSoup(page.content, 'html.parser')
-           	s = soup.findAll('ul')[nregion].get_text()
-           	ip=re.findall( r'[0-9]+(?:\.[0-9]+){3}', s)
-           except IndexError:
-                module.fail_json(msg='Could not find IP on given FAQ of nodeping page')  
+	   page= requests.get('https://nodeping.com/faq')
+           soup = BeautifulSoup(page.content, 'html.parser')
+           s = soup.findAll('ul')[nregion].get_text()
+           ip=re.findall( r'[0-9]+(?:\.[0-9]+){3}', s)
+
            return ip
     	def ipSg(self):
-           if not Has_boto3:
-              module.fail_json(msg='boto3 required for this module') 
-           try:
-           	sg = ec2.SecurityGroup(self.sgid)
-           	ip=[x['CidrIp'].split('/')[0] for x in sg.ip_permissions[0]['IpRanges']]
-	   except IndexError:
-                module.fail_json(msg='Security group is empty')
+           sg = ec2.SecurityGroup(self.sgid)
+           ip=[x['CidrIp'].split('/')[0] for x in sg.ip_permissions[0]['IpRanges']]
  	
            return ip
     
@@ -93,12 +80,17 @@ def main():
    toPort= module.params['toPort']
 
    nodepingip=[x.encode("utf-8") for x in NodepingSgCompare(Noderegion,SgGrp).ipExternal()]
+   nodeips=[x+"/32" for x in nodepingip]
    ipcompare=NodepingSgCompare(Noderegion, SgGrp).ipCompare()
    lists=ipcompare
 #removing unknown IPs
-   sg = nodepingsg.ec2.SecurityGroup(SgGrp)
+   sg = ec2.SecurityGroup(SgGrp)
    for ip in ipcompare:
-   	sg.revoke_ingress(IpProtocol="tcp", CidrIp=ip, FromPort=80, ToPort=80)
+   	sg.revoke_ingress(IpProtocol="tcp", CidrIp=ip, FromPort=FromPort, ToPort=toPort)
+#adding nodepingIPs
+   
+   for ip in nodeips:
+        sg.authorize_ingress(IpProtocol="tcp", CidrIp=ip, FromPort=FromPort, ToPort=toPort)
    module.exit_json(changed='changed')
 if __name__ == '__main__':
 
